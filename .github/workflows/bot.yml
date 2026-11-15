@@ -34,7 +34,7 @@ jobs:
   bot:
     name: Jalankan bot (polling)
     needs: [auth-test, bot-test]
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:

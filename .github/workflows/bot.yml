@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  auth-test:
+    name: Validasi initData (vektor Telegram)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Uji vektor resmi Telegram
+        working-directory: miniapp
+        run: python telegram_auth.py
+
+  bot-test:
+    name: Bot polling + pencatatan (API palsu)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Uji bot.py
+        working-directory: miniapp
+        run: python test_bot.py
+
+  bot:
+    name: Jalankan bot (polling)
+    needs: [auth-test, bot-test]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      MONEYSAV_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      MONEYSAV_HOME_CHAT: ${{ vars.MONEYSAV_HOME_CHAT || '7238979587' }}
+      MONEYSAV_APP_URL: ${{ vars.MONEYSAV_APP_URL || 'https://hrihq.github.io/moneysav-miniapp/moneysav.html' }}
+      MONEYSAV_ALLOWED_USERS: ${{ vars.MONEYSAV_ALLOWED_USERS || '7238979587' }}
+      MONEYSAV_STORE: store.json
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Polling getUpdates (bot)
+        working-directory: miniapp
+        run: python bot.py
